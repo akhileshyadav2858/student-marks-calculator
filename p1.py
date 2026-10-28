@@ -1,0 +1,224 @@
+import json
+import os
+
+FILE_NAME = "students.json"
+
+
+# Load saved student data
+def load_students():
+    if not os.path.exists(FILE_NAME):
+        return []
+
+    try:
+        with open(FILE_NAME, "r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        if isinstance(data, list):
+            return data
+
+        print("Warning: Invalid data format. Starting with empty records.")
+        return []
+
+    except (json.JSONDecodeError, OSError):
+        print("Warning: Could not read saved data.")
+        return []
+
+
+# Save student data
+def save_students():
+    try:
+        with open(FILE_NAME, "w", encoding="utf-8") as file:
+            json.dump(students, file, indent=4, ensure_ascii=False)
+        return True
+    except OSError:
+        print("Error: Could not save student data!")
+        return False
+
+
+students = load_students()
+
+
+# Show menu
+def show_menu():
+    print("\n===== STUDENT MANAGEMENT SYSTEM =====")
+    print("1. Add Student")
+    print("2. View Students")
+    print("3. Search Student")
+    print("4. Update Student")
+    print("5. Delete Student")
+    print("6. Exit")
+
+
+# Add student
+def add_student():
+    print("\n--- Add Student ---")
+
+    name = input("Enter student name: ").strip()
+    if not name:
+        print("Error: Name cannot be empty!")
+        return
+
+    roll = input("Enter roll number: ").strip()
+    if not roll:
+        print("Error: Roll number cannot be empty!")
+        return
+
+    for student in students:
+        if student["roll"] == roll:
+            print("Error: Roll number already exists!")
+            return
+
+    try:
+        marks = float(input("Enter marks (0-100): "))
+    except ValueError:
+        print("Error: Enter numeric marks!")
+        return
+
+    if not 0 <= marks <= 100:
+        print("Error: Marks must be between 0 and 100!")
+        return
+
+    student = {
+        "name": name,
+        "roll": roll,
+        "marks": marks
+    }
+
+    students.append(student)
+
+    if save_students():
+        print("Student added and saved successfully!")
+    else:
+        students.remove(student)
+
+
+# View all students
+def view_students():
+    print("\n--- Student Records ---")
+
+    if not students:
+        print("No student records found!")
+        return
+
+    for student in students:
+        print("-------------------------")
+        print("Name:", student["name"])
+        print("Roll Number:", student["roll"])
+        print("Marks:", student["marks"])
+
+
+# Search student
+def search_student():
+    roll = input("Enter roll number to search: ").strip()
+
+    for student in students:
+        if student["roll"] == roll:
+            print("\nStudent Found!")
+            print("Name:", student["name"])
+            print("Roll Number:", student["roll"])
+            print("Marks:", student["marks"])
+            return
+
+    print("Student not found!")
+
+
+# Update student
+def update_student():
+    roll = input("Enter roll number to update: ").strip()
+
+    for student in students:
+        if student["roll"] == roll:
+            old_name = student["name"]
+            old_marks = student["marks"]
+
+            name = input(
+                "Enter new name (Enter to keep old): "
+            ).strip()
+
+            marks_input = input(
+                "Enter new marks (Enter to keep old): "
+            ).strip()
+
+            new_marks = old_marks
+
+            if marks_input:
+                try:
+                    new_marks = float(marks_input)
+                except ValueError:
+                    print("Error: Marks must be numeric!")
+                    return
+
+                if not 0 <= new_marks <= 100:
+                    print("Error: Marks must be between 0 and 100!")
+                    return
+
+            if name:
+                student["name"] = name
+
+            student["marks"] = new_marks
+
+            if save_students():
+                print("Student updated successfully!")
+            else:
+                student["name"] = old_name
+                student["marks"] = old_marks
+
+            return
+
+    print("Student not found!")
+
+
+# Delete student
+def delete_student():
+    roll = input("Enter roll number to delete: ").strip()
+
+    for student in students:
+        if student["roll"] == roll:
+            confirm = input(
+                "Are you sure you want to delete? (y/n): "
+            ).strip().lower()
+
+            if confirm == "y":
+                index = students.index(student)
+                removed = students.pop(index)
+
+                if save_students():
+                    print("Student deleted successfully!")
+                else:
+                    students.insert(index, removed)
+
+            else:
+                print("Delete cancelled!")
+
+            return
+
+    print("Student not found!")
+
+
+# Main program
+while True:
+    show_menu()
+
+    choice = input("Enter your choice (1-6): ").strip()
+
+    if choice == "1":
+        add_student()
+
+    elif choice == "2":
+        view_students()
+
+    elif choice == "3":
+        search_student()
+
+    elif choice == "4":
+        update_student()
+
+    elif choice == "5":
+        delete_student()
+
+    elif choice == "6":
+        print("Thank you for using Student Management System!")
+        break
+
+    else:
+        print("Invalid choice! Please enter 1-6.")
